@@ -23,10 +23,29 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
-
+#include "button.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
+void EXTI3_IRQHandler(void) {
+    if (EXTI->PR & (1 << 3)) {
+        EXTI->PR |= (1 << 3);  // clear pending
+        system_should_reset = 1;
+    }
+}
 
+void EXTI9_5_IRQHandler(void) {
+    if (EXTI->PR & (1 << 5)) {
+        EXTI->PR |= (1 << 5);
+        buzzer_should_off = 1; // TODO xử lý tắt buzzer
+    }
+}
+
+void EXTI15_10_IRQHandler(void) {
+    if (EXTI->PR & (1 << 13)) {
+        EXTI->PR |= (1 << 13);
+        system_powered_on ^= 1;  // Toggle trạng thái
+    }
+}
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
