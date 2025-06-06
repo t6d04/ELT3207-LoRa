@@ -1,13 +1,9 @@
-/*
- * lcd.h
- *
- *  Created on: Jun 5, 2025
- *      Author: namlp
- */
+#ifndef LCD_H
+#define LCD_H
 
-#ifndef INC_LCD_H_
-#define INC_LCD_H_
+void LCD_Init(void);
+void LCD_Clear(void);
+void LCD_SetCursor(uint8_t row, uint8_t col);
+void LCD_Print(char *str);
 
-
-
-#endif /* INC_LCD_H_ */
+#endif
