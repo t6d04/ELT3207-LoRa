@@ -24,26 +24,35 @@
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
 #include "button.h"
+#include "lora.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
+void EXTI0_IRQHandler(void) {
+    if (EXTI->PR & (1 << 0)) {
+        EXTI->PR |= (1 << 0); // clear pending
+        lora_handle_packet_interrupt(); // gọi hàm xử lý
+    }
+}
+
 void EXTI3_IRQHandler(void) {
     if (EXTI->PR & (1 << 3)) {
         EXTI->PR |= (1 << 3);  // clear pending
-        system_should_reset = 1;
+//        system_should_reset = 1;
+
     }
 }
 
 void EXTI9_5_IRQHandler(void) {
     if (EXTI->PR & (1 << 5)) {
         EXTI->PR |= (1 << 5);
-        buzzer_should_off = 1; // TODO xử lý tắt buzzer
+//        buzzer_should_off = 1; // TODO xử lý tắt buzzer
     }
 }
 
 void EXTI15_10_IRQHandler(void) {
     if (EXTI->PR & (1 << 13)) {
         EXTI->PR |= (1 << 13);
-        system_powered_on ^= 1;  // Toggle trạng thái
+//        system_powered_on ^= 1;  // Toggle trạng thái
     }
 }
 /* USER CODE END TD */
