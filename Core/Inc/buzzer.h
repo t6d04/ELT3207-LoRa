@@ -1,13 +1,9 @@
-/*
- * buzzer.h
- *
- *  Created on: Jun 5, 2025
- *      Author: namlp
- */
+#ifndef BUZZER_H
+#define BUZZER_H
 
-#ifndef INC_BUZZER_H_
-#define INC_BUZZER_H_
+void Buzzer_Init(void);
+void Buzzer_On(void);
+void Buzzer_Off(void);
+void Buzzer_Alert(int times, int delay_ms);
 
-
-
-#endif /* INC_BUZZER_H_ */
+#endif
