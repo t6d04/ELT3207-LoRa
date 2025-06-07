@@ -25,6 +25,7 @@
 /* USER CODE END Includes */
 #include "button.h"
 #include "lora.h"
+#include "system.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
 void EXTI0_IRQHandler(void) {
@@ -37,7 +38,8 @@ void EXTI0_IRQHandler(void) {
 void EXTI3_IRQHandler(void) {
     if (EXTI->PR & (1 << 3)) {
         EXTI->PR |= (1 << 3);  // clear pending
-//        system_should_reset = 1;
+
+        NVIC_SystemReset();
 
     }
 }
@@ -52,7 +54,12 @@ void EXTI9_5_IRQHandler(void) {
 void EXTI15_10_IRQHandler(void) {
     if (EXTI->PR & (1 << 13)) {
         EXTI->PR |= (1 << 13);
-//        system_powered_on ^= 1;  // Toggle trạng thái
+        system_powered_on ^= 1;  // Toggle trạng thái
+
+        if (system_powered_on)
+			system_startup();
+		else
+			system_shutdown();
     }
 }
 /* USER CODE END TD */

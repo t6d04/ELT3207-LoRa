@@ -1,7 +1,6 @@
 #include "button.h"
 
 volatile uint8_t system_powered_on = 0;
-volatile uint8_t system_should_reset = 0;
 volatile uint8_t buzzer_should_off = 0;
 
 void button_init(void) {

@@ -16,7 +16,6 @@
 
 // ==== Trạng thái hệ thống ====
 extern volatile uint8_t system_powered_on;
-extern volatile uint8_t system_should_reset;
 extern volatile uint8_t buzzer_should_off;
 
 // ==== Khởi tạo ====
