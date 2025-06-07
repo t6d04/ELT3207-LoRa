@@ -1,17 +1,8 @@
 #include "stm32f4xx.h"
 #include "buzzer.h"
-#include "timer.h"
+#include "timer.h"  // Timer_DelayMs()
 
 #define BUZZER_PIN 10  // PB10
-
-void Buzzer_Init(void) {
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
-
-    GPIOB->MODER &= ~(0x3 << (BUZZER_PIN * 2));
-    GPIOB->MODER |=  (0x1 << (BUZZER_PIN * 2)); // Output
-    GPIOB->OTYPER &= ~(1 << BUZZER_PIN);
-    GPIOB->OSPEEDR |= (0x3 << (BUZZER_PIN * 2));
-}
 
 void Buzzer_On(void) {
     GPIOB->ODR |= (1 << BUZZER_PIN);
