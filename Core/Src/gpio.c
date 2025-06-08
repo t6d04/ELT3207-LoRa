@@ -7,19 +7,19 @@ void gpio_init_all(void) {
                     RCC_AHB1ENR_GPIOCEN;
 
     // ------------------------
-    // BUTTONS: PC13, PB3, PB5 (Input + Pull-down)
+    // BUTTONS: PC13, PB3, PB5 (Input + Pull-up)
     // ------------------------
-    GPIOC->MODER &= ~(0x3 << (13 * 2));  // Input
+    GPIOC->MODER &= ~(0x3 << (13 * 2));  // PC13
     GPIOC->PUPDR &= ~(0x3 << (13 * 2));
-    GPIOC->PUPDR |=  (0x2 << (13 * 2));  // Pull-down
+    GPIOC->PUPDR |=  (0x1 << (13 * 2));
 
     GPIOB->MODER &= ~(0x3 << (3 * 2));   // PB3
     GPIOB->PUPDR &= ~(0x3 << (3 * 2));
-    GPIOB->PUPDR |=  (0x2 << (3 * 2));
+    GPIOB->PUPDR |=  (0x1 << (3 * 2));
 
     GPIOB->MODER &= ~(0x3 << (5 * 2));   // PB5
     GPIOB->PUPDR &= ~(0x3 << (5 * 2));
-    GPIOB->PUPDR |=  (0x2 << (5 * 2));
+    GPIOB->PUPDR |=  (0x1 << (5 * 2));
 
     // ------------------------
     // LEDS: PB0, PB1 (Output)
@@ -29,9 +29,6 @@ void gpio_init_all(void) {
 
     GPIOB->MODER &= ~(0x3 << (1 * 2));
     GPIOB->MODER |=  (0x1 << (1 * 2));  // Output
-
-    GPIOB->OTYPER &= ~((1 << 0) | (1 << 1)); // Push-pull
-    GPIOB->OSPEEDR |= (0x3 << (0 * 2)) | (0x3 << (1 * 2)); // High speed
 
     // ------------------------
     // BUZZER: PB10 (Output)
