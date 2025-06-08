@@ -5,9 +5,18 @@
  *      Author: namlp
  */
 
-#ifndef INC_TIMER_H_
-#define INC_TIMER_H_
+//#ifndef INC_TIMER_H_
+//#define INC_TIMER_H_
+//
+//
+//
+//#endif /* INC_TIMER_H_ */
 
 
+#ifndef TIMER_H
+#define TIMER_H
 
-#endif /* INC_TIMER_H_ */
+void Timer_Init(void);
+void Timer_DelayMs(uint32_t ms);
+
+#endif
