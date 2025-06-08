@@ -25,6 +25,7 @@
 /* USER CODE END Includes */
 #include "button.h"
 #include "lora.h"
+#include "gpio.h"
 #include "system.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
@@ -37,7 +38,7 @@ void EXTI0_IRQHandler(void) {
 
 void EXTI3_IRQHandler(void) {
     if (EXTI->PR & (1 << 3)) {
-        EXTI->PR |= (1 << 3);  // clear pending
+        EXTI->PR |= (1 << 3);
 
         NVIC_SystemReset();
 
@@ -47,13 +48,15 @@ void EXTI3_IRQHandler(void) {
 void EXTI9_5_IRQHandler(void) {
     if (EXTI->PR & (1 << 5)) {
         EXTI->PR |= (1 << 5);
-//        buzzer_should_off = 1; // TODO xử lý tắt buzzer
+        // TODO: OFF BUZZER
+        GPIOB->ODR |= (1 << 1);
     }
 }
 
 void EXTI15_10_IRQHandler(void) {
     if (EXTI->PR & (1 << 13)) {
         EXTI->PR |= (1 << 13);
+
         system_powered_on ^= 1;  // Toggle trạng thái
 
         if (system_powered_on)

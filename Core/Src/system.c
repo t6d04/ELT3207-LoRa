@@ -18,12 +18,22 @@ void system_startup(void) {
 }
 
 void system_shutdown(void) {
-    lora_write_reg(REG_OP_MODE, 0x80); // Sleep mode
+    // Đưa LoRa về sleep mode
+    lora_write_reg(REG_OP_MODE, 0x80);  // LoRa sleep mode
 
+    // TODO: lcd_clear();
+    // TODO: lcd_off(); nếu có
 
-    // TODO: add led, lcd and buzzer
+    // TODO: led_off(LED_GREEN); // Tắt LED trạng thái
+    // TODO: buzzer_off();       // Tắt buzzer
 
-    // Dừng ngoại vi nếu tiết kiệm điện
+    // Tắt clock ngoại vi không cần thiết
     RCC->APB2ENR &= ~RCC_APB2ENR_SPI1EN;
     RCC->APB1ENR &= ~RCC_APB1ENR_I2C1EN;
+
+    // Đưa các GPIO output không dùng về analog để giảm rò rỉ dòng
+    // LED (PB0, PB1), buzzer (PB10)
+    GPIOB->MODER &= ~((0x3 << (0 * 2)) | (0x3 << (1 * 2)) | (0x3 << (10 * 2)));
+    GPIOB->MODER |=  ((0x3 << (0 * 2)) | (0x3 << (1 * 2)) | (0x3 << (10 * 2))); // Analog mode
+
 }
