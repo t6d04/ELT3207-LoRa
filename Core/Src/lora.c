@@ -6,6 +6,20 @@
 #define NSS_LOW()   (GPIOA->BSRR = (uint32_t)GPIO_BSRR_BR_4)
 #define NSS_HIGH()  (GPIOA->BSRR = (uint32_t)GPIO_BSRR_BS_4)
 
+static void spi1_init(void) {
+    // Bật clock SPI1
+    RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+
+    // Reset cấu hình SPI1
+    SPI1->CR1 = 0;
+
+    // Cấu hình SPI1:
+    SPI1->CR1 |= SPI_CR1_MSTR;               // Master mode
+    SPI1->CR1 |= SPI_CR1_SSM | SPI_CR1_SSI;  // Software slave select
+    SPI1->CR1 |= SPI_CR1_BR_1;               // Baudrate = fPCLK/8 (tạm ổn)
+    SPI1->CR1 |= SPI_CR1_SPE;                // Enable SPI1
+}
+
 static uint8_t spi_transfer(uint8_t data) {
     while (!(SPI1->SR & SPI_SR_TXE));
     *(volatile uint8_t *)&SPI1->DR = data;
@@ -36,6 +50,18 @@ static void lora_set_frequency(uint32_t freq) {
 }
 
 void lora_init(void) {
+	spi1_init();  // 🟢 Cần thiết để SPI hoạt động
+
+	// Delay khởi động LoRa
+	for (volatile int i = 0; i < 10000; i++);
+
+//	uint8_t version = lora_read_reg(0x42);
+//	if (version == 0x12) {
+//	    // Giao tiếp SPI lỗi, có thể sáng đèn đỏ ở đây
+//	    GPIOB->ODR |= (1 << 0); // Đèn đỏ
+//	    return; // Thoát để tránh chạy tiếp
+//	}
+
     lora_write_reg(REG_OP_MODE, 0x80); // Sleep mode
     for (volatile int i = 0; i < 10000; i++);
     lora_write_reg(REG_OP_MODE, 0x81); // Standby
