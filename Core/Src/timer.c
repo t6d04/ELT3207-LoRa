@@ -11,9 +11,6 @@
 
 static volatile uint32_t ticks;
 
-void SysTick_Handler(void) {
-    if (ticks > 0) ticks--;
-}
 
 void Timer_Init(void) {
     // 1 ms tick (với HCLK = 16 MHz)
