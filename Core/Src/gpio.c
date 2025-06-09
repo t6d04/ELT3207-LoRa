@@ -70,13 +70,15 @@ void gpio_init_all(void) {
     NVIC_EnableIRQ(EXTI0_IRQn);
 
     // ------------------------
-    // LCD I2C: PB6 (SCL), PB7 (SDA) – AF4
+    // LCD I2C (I2C1): PB8 (SCL), PB9 (SDA) – AF4
     // ------------------------
-    GPIOB->MODER &= ~((0x3 << (6 * 2)) | (0x3 << (7 * 2)));
-    GPIOB->MODER |=  ((0x2 << (6 * 2)) | (0x2 << (7 * 2))); // AF mode
-    GPIOB->AFR[0] &= ~((0xF << (6 * 4)) | (0xF << (7 * 4)));
-    GPIOB->AFR[0] |=  ((0x4 << (6 * 4)) | (0x4 << (7 * 4))); // AF4 = I2C1
-    GPIOB->OTYPER |=  (1 << 6) | (1 << 7); // Open-drain
-    GPIOB->PUPDR &= ~((0x3 << (6 * 2)) | (0x3 << (7 * 2)));
-    GPIOB->PUPDR |=  (0x1 << (6 * 2)) | (0x1 << (7 * 2)); // Pull-up
+    GPIOB->MODER &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));
+    GPIOB->MODER |=  ((0x2 << (8 * 2)) | (0x2 << (9 * 2))); // AF mode
+
+    GPIOB->AFR[1] &= ~((0xF << ((8 - 8) * 4)) | (0xF << ((9 - 8) * 4))); // AFR[1] cho pin 8-15
+    GPIOB->AFR[1] |=  ((0x4 << ((8 - 8) * 4)) | (0x4 << ((9 - 8) * 4))); // AF4 = I2C1
+
+    GPIOB->OTYPER |= (1 << 8) | (1 << 9);   // Open-drain
+    GPIOB->PUPDR &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));
+    GPIOB->PUPDR |=  ((0x1 << (8 * 2)) | (0x1 << (9 * 2))); // Pull-up
 }

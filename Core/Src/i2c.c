@@ -1,7 +1,7 @@
 #include "stm32f4xx.h"
 #include "i2c.h"
 
-void I2C1_Init(void) {
+void i2c1_init(void) {
     // Enable I2C1 clock
     RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
 
@@ -14,26 +14,26 @@ void I2C1_Init(void) {
     I2C1->CR1 |= I2C_CR1_PE;
 }
 
-void I2C1_Start(void) {
+void i2c1_start(void) {
     I2C1->CR1 |= I2C_CR1_START;
     while (!(I2C1->SR1 & I2C_SR1_SB));
 }
 
-void I2C1_Stop(void) {
+void i2c1_stop(void) {
     I2C1->CR1 |= I2C_CR1_STOP;
 }
 
-void I2C1_Write(uint8_t data) {
+void i2c1_write(uint8_t data) {
     while (!(I2C1->SR1 & I2C_SR1_TXE));
     I2C1->DR = data;
     while (!(I2C1->SR1 & I2C_SR1_BTF));
 }
 
-void I2C1_WriteByteTo(uint8_t addr, uint8_t data) {
-    I2C1_Start();
+void i2c1_writebyteto(uint8_t addr, uint8_t data) {
+    i2c1_start();
     I2C1->DR = addr << 1; // write mode
     while (!(I2C1->SR1 & I2C_SR1_ADDR));
     (void)I2C1->SR2;
-    I2C1_Write(data);
-    I2C1_Stop();
+    i2c1_write(data);
+    i2c1_stop();
 }

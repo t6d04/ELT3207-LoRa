@@ -16,7 +16,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-void Timer_Init(void);
-void Timer_DelayMs(uint32_t ms);
+void timer_init(void);
+void timer_delayms(uint32_t ms);
 
 #endif

@@ -2,23 +2,23 @@
 #include "led.h"
 #include "timer.h"  // Cần có Timer_DelayMs()
 
-void LED_On(uint8_t pin) {
+void led_on(uint8_t pin) {
     GPIOB->ODR |= (1 << pin);
 }
 
-void LED_Off(uint8_t pin) {
+void led_off(uint8_t pin) {
     GPIOB->ODR &= ~(1 << pin);
 }
 
-void LED_Toggle(uint8_t pin) {
+void led_toggle(uint8_t pin) {
     GPIOB->ODR ^= (1 << pin);
 }
 
-void LED_Blink(uint8_t pin, int times, int delay_ms) {
+void led_blink(uint8_t pin, int times, int delay_ms) {
     for (int i = 0; i < times; i++) {
-        LED_On(pin);
-        Timer_DelayMs(delay_ms);
-        LED_Off(pin);
-        Timer_DelayMs(delay_ms);
+        led_on(pin);
+        timer_delayms(delay_ms);
+        led_off(pin);
+        timer_delayms(delay_ms);
     }
 }
