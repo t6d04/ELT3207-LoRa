@@ -9,8 +9,6 @@
 void system_startup(void) {
     gpio_init_all();
     // TODO: spi_init(), i2c_init() nếu chưa init
-
-    lora_init();
 //    lcd_init();
 //    lcd_clear();
 //    lcd_print("Receiver DA BAT");
@@ -19,7 +17,6 @@ void system_startup(void) {
 
 void system_shutdown(void) {
     // Đưa LoRa về sleep mode
-    lora_write_reg(REG_OP_MODE, 0x80);  // LoRa sleep mode
 
     // TODO: lcd_clear();
     // TODO: lcd_off(); nếu có

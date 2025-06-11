@@ -12,11 +12,8 @@ void buzzer_off(void) {
     GPIOB->ODR &= ~(1 << BUZZER_PIN);
 }
 
-void buzzer_alert(int times, int delay_ms) {
-    for (int i = 0; i < times; i++) {
-        buzzer_on();
-        timer_delayms(delay_ms);
-        buzzer_off();
-        timer_delayms(delay_ms);
-    }
+void buzzer_alert(int delay_ms) {
+	buzzer_on();
+	timer_delay_ms(delay_ms);
+	buzzer_off();
 }

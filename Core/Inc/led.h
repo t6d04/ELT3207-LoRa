@@ -2,12 +2,21 @@
 #define LED_H
 
 // Định nghĩa đúng chân GPIO theo bảng
-#define LED1_PIN 0  // PB0
-#define LED2_PIN 1  // PB1
+#define LED_POWER_PORT    GPIOB
+#define LED_POWER_PIN     0
 
-void led_on(uint8_t pin);
-void led_off(uint8_t pin);
-void led_toggle(uint8_t pin);
-void led_blink(uint8_t pin, int times, int delay_ms);
+#define LED_OK_PORT       GPIOB
+#define LED_OK_PIN        1
+
+#define LED_RAW_PORT      GPIOC
+#define LED_RAW_PIN       2
+
+#define LED_IGNORE_PORT   GPIOC
+#define LED_IGNORE_PIN    3
+
+void led_on(GPIO_TypeDef* port, uint8_t pin);
+void led_off(GPIO_TypeDef* port, uint8_t pin);
+void led_toggle(GPIO_TypeDef* port, uint8_t pin);
+void led_blink(GPIO_TypeDef* port, uint8_t pin, int times, int delay_ms);
 
 #endif

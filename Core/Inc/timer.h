@@ -1,22 +1,11 @@
-/*
- * timer.h
- *
- *  Created on: Jun 5, 2025
- *      Author: namlp
- */
+// timer.h - Header cho module delay bằng SysTick STM32F4
+#ifndef __TIMER_H
+#define __TIMER_H
 
-//#ifndef INC_TIMER_H_
-//#define INC_TIMER_H_
-//
-//
-//
-//#endif /* INC_TIMER_H_ */
-
-
-#ifndef TIMER_H
-#define TIMER_H
+#include <stdint.h>
 
 void timer_init(void);
-void timer_delayms(uint32_t ms);
+void timer_delay_ms(uint32_t ms);
+uint32_t timer_is_busy(void);
 
-#endif
+#endif // __TIMER_H

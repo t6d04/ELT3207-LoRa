@@ -30,6 +30,12 @@ void gpio_init_all(void) {
     GPIOB->MODER &= ~(0x3 << (1 * 2));
     GPIOB->MODER |=  (0x1 << (1 * 2));  // Output
 
+    GPIOC->MODER &= ~(0x3 << (2 * 2));
+	GPIOC->MODER |=  (0x1 << (2 * 2));  // Output
+
+	GPIOC->MODER &= ~(0x3 << (3 * 2));
+	GPIOC->MODER |=  (0x1 << (3 * 2));  // Output
+
     // ------------------------
     // BUZZER: PB10 (Output)
     // ------------------------
@@ -72,13 +78,23 @@ void gpio_init_all(void) {
     // ------------------------
     // LCD I2C (I2C1): PB8 (SCL), PB9 (SDA) – AF4
     // ------------------------
-    GPIOB->MODER &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));
-    GPIOB->MODER |=  ((0x2 << (8 * 2)) | (0x2 << (9 * 2))); // AF mode
+    // 1. Enable clock cho GPIOB
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
 
-    GPIOB->AFR[1] &= ~((0xF << ((8 - 8) * 4)) | (0xF << ((9 - 8) * 4))); // AFR[1] cho pin 8-15
+    // 2. Cấu hình PB8 và PB9 làm Alternate Function (AF4 = I2C1)
+    GPIOB->MODER &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));    // clear mode
+    GPIOB->MODER |=  ((0x2 << (8 * 2)) | (0x2 << (9 * 2)));    // 10 = AF mode
+
+    GPIOB->AFR[1] &= ~((0xF << ((8 - 8) * 4)) | (0xF << ((9 - 8) * 4))); // clear
     GPIOB->AFR[1] |=  ((0x4 << ((8 - 8) * 4)) | (0x4 << ((9 - 8) * 4))); // AF4 = I2C1
 
-    GPIOB->OTYPER |= (1 << 8) | (1 << 9);   // Open-drain
-    GPIOB->PUPDR &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));
-    GPIOB->PUPDR |=  ((0x1 << (8 * 2)) | (0x1 << (9 * 2))); // Pull-up
+    GPIOB->OTYPER |=  (1 << 8) | (1 << 9);                    // Open-drain
+
+    GPIOB->OSPEEDR &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2))); // clear speed
+    GPIOB->OSPEEDR |=  ((0x3 << (8 * 2)) | (0x3 << (9 * 2))); // Very High Speed (11)
+
+    GPIOB->PUPDR &= ~((0x3 << (8 * 2)) | (0x3 << (9 * 2)));    // No pull (00)
+
+    // 3. Enable clock cho I2C1
+    RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
 }
