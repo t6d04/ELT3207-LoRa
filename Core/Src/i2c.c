@@ -1,66 +1,52 @@
-// ===================== i2c.c =====================
 #include "stm32f4xx.h"
 #include "i2c.h"
-#include "timer.h"
 
-void I2C1_Init(void) {
-    // Thiết lập tốc độ truyền cho I2C1
-    I2C1->CR1 &= ~I2C_CR1_PE;
-    I2C1->CR2 = 16;      // Tần số APB1 = 16 MHz
-    I2C1->CCR = 80;      // 100kHz = 16MHz / (2 * 80)
-    I2C1->TRISE = 17;    // TRISE = (1000ns / 62.5ns) + 1 = 17
-    I2C1->CR1 |= I2C_CR1_PE; // Bật I2C
+// I2C2: SCL = PB10, SDA = PB3
+void i2c2_init(void) {
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
+    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
+
+    // PB10 - SCL
+    GPIOB->MODER &= ~(3 << (10 * 2));
+    GPIOB->MODER |=  (2 << (10 * 2));
+    GPIOB->AFR[1] &= ~(0xF << ((10 - 8) * 4));
+    GPIOB->AFR[1] |=  (4 << ((10 - 8) * 4));
+    GPIOB->OTYPER |= (1 << 10);
+    GPIOB->PUPDR &= ~(3 << (10 * 2));
+    GPIOB->PUPDR |=  (1 << (10 * 2));
+
+    // PB3 - SDA
+    GPIOB->MODER &= ~(3 << (3 * 2));
+    GPIOB->MODER |=  (2 << (3 * 2));
+    GPIOB->AFR[0] &= ~(0xF << (3 * 4));
+    GPIOB->AFR[0] |=  (9 << (3 * 4));  // AF9 for I2C2_SDA
+    GPIOB->OTYPER |= (1 << 3);
+    GPIOB->PUPDR &= ~(3 << (3 * 2));
+    GPIOB->PUPDR |=  (1 << (3 * 2));
+
+    // I2C cấu hình
+    I2C2->CR2 = 16;
+    I2C2->CCR = 80;
+    I2C2->TRISE = 17;
+    I2C2->CR1 |= I2C_CR1_PE;
 }
+uint8_t i2c2_check_address(uint8_t address) {
+    I2C2->CR1 |= I2C_CR1_START;                          // Gửi tín hiệu START
+    while (!(I2C2->SR1 & I2C_SR1_SB));                   // Chờ cờ SB được set
 
-void i2c1_start(void) {
-    I2C1->CR1 |= I2C_CR1_START;
-    while (!(I2C1->SR1 & I2C_SR1_SB)); // Chờ cờ SB được set
-    (void)I2C1->SR1; // Đọc để xóa cờ SB
-}
+    I2C2->DR = address;                                  // Gửi địa chỉ slave
 
-void i2c1_stop(void) {
-    I2C1->CR1 |= I2C_CR1_STOP;
-    timer_delay_ms(1);
-}
+    // Chờ phản hồi ACK hoặc NACK
+    while ((I2C2->SR1 & (I2C_SR1_ADDR | I2C_SR1_AF)) == 0);
 
-uint8_t i2c1_check_address(uint8_t address) {
-    i2c1_start();
-    I2C1->DR = address << 1; // Write mode
-
-    // Chờ phản hồi
-    while (!(I2C1->SR1 & (I2C_SR1_ADDR | I2C_SR1_AF)));
-
-    if (I2C1->SR1 & I2C_SR1_ADDR) {
-        (void)I2C1->SR1;
-        (void)I2C1->SR2;
-        i2c1_stop();
-        return 1; // Có thiết bị
+    if (I2C2->SR1 & I2C_SR1_ADDR) {
+        (void)I2C2->SR1;
+        (void)I2C2->SR2;
+        I2C2->CR1 |= I2C_CR1_STOP;
+        return 1;                                        // Tìm thấy slave
     } else {
-        I2C1->SR1 &= ~I2C_SR1_AF; // Xóa lỗi ACK Fail nếu có
-        i2c1_stop();
-        return 0; // Không có thiết bị
+        I2C2->SR1 &= ~I2C_SR1_AF;                        // Xóa cờ lỗi
+        I2C2->CR1 |= I2C_CR1_STOP;
+        return 0;                                        // Không có phản hồi
     }
 }
-
-//void I2C1_WriteByte(uint8_t addr_7bit, uint8_t data) {
-//    // 1. Wait until I2C bus is not busy
-//    while (I2C1->SR2 & I2C_SR2_BUSY);
-//
-//    // 2. Send START
-//    I2C1->CR1 |= I2C_CR1_START;
-//    while (!(I2C1->SR1 & I2C_SR1_SB));
-//    (void)I2C1->SR1;  // Clear SB by reading SR1
-//
-//    // 3. Send slave address
-//    I2C1->DR = addr_7bit << 1;  // Write mode
-//    while (!(I2C1->SR1 & I2C_SR1_ADDR));
-//    (void)I2C1->SR2;  // Clear ADDR by reading SR2
-//
-//    // 4. Send data byte
-//    while (!(I2C1->SR1 & I2C_SR1_TXE));
-//    I2C1->DR = data;
-//    while (!(I2C1->SR1 & I2C_SR1_BTF));
-//
-//    // 5. Send STOP
-//    I2C1->CR1 |= I2C_CR1_STOP;
-//}

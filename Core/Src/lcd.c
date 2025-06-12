@@ -1,84 +1,62 @@
-
 #include "stm32f4xx.h"
-#include "i2c.h"
-#include "timer.h"
-#include <stdint.h>
+#include "lcd.h"
 
-#define SLAVE_ADDRESS_LCD 0x4E
-
-#define LCD_CMD_FUNCTION_SET     0x28
-#define LCD_CMD_DISPLAY_OFF      0x08
-#define LCD_CMD_DISPLAY_ON       0x0C
-#define LCD_CMD_CLEAR_DISPLAY    0x01
-#define LCD_CMD_ENTRY_MODE_SET   0x06
-#define LCD_CMD_SET_CURSOR       0x80
-
-static void lcd_write_4bit(uint8_t data);
-void lcd_send_cmd(uint8_t cmd);
-void lcd_send_data(uint8_t data);
-void lcd_init(void);
-void lcd_clear(void);
-void lcd_put_cursor(int row, int col);
-void lcd_send_string(const char *str);
-
-static void lcd_write_4bit(uint8_t data) {
-    // Gửi 1 byte tới I2C LCD
-    I2C1_WriteByte(SLAVE_ADDRESS_LCD, data);
-    timer_delay_ms(1);
+void lcd_i2c_start(void) {
+    I2C2->CR1 |= I2C_CR1_START;
+    while (!(I2C2->SR1 & I2C_SR1_SB));
+    I2C2->DR = (LCD_ADDR << 1);
+    while (!(I2C2->SR1 & I2C_SR1_ADDR));
+    (void)I2C2->SR1; (void)I2C2->SR2;
 }
 
-void lcd_send_cmd(uint8_t cmd) {
-    uint8_t upper = cmd & 0xF0;
-    uint8_t lower = (cmd << 4) & 0xF0;
-
-    lcd_write_4bit(upper | 0x0C);  // EN=1, RS=0
-    lcd_write_4bit(upper | 0x08);  // EN=0
-    lcd_write_4bit(lower | 0x0C);  // EN=1, RS=0
-    lcd_write_4bit(lower | 0x08);  // EN=0
+void lcd_i2c_stop(void) {
+    I2C2->CR1 |= I2C_CR1_STOP;
 }
 
-void lcd_send_data(uint8_t data) {
-    uint8_t upper = data & 0xF0;
-    uint8_t lower = (data << 4) & 0xF0;
-
-    lcd_write_4bit(upper | 0x0D);  // EN=1, RS=1
-    lcd_write_4bit(upper | 0x09);  // EN=0
-    lcd_write_4bit(lower | 0x0D);  // EN=1, RS=1
-    lcd_write_4bit(lower | 0x09);  // EN=0
+void lcd_i2c_write(uint8_t data) {
+    while (!(I2C2->SR1 & I2C_SR1_TXE));
+    I2C2->DR = data;
+    while (!(I2C2->SR1 & I2C_SR1_BTF));
 }
 
-void lcd_clear(void) {
-    lcd_send_cmd(LCD_CMD_CLEAR_DISPLAY);
-    timer_delay_ms(2);
+void lcd_write_nibble(uint8_t nibble, uint8_t control) {
+    uint8_t data = (nibble & 0xF0) | control | LCD_BACKLIGHT;
+    lcd_i2c_start();
+    lcd_i2c_write(data);
+    lcd_i2c_write(data | LCD_ENABLE);
+    for (volatile int i = 0; i < 1000; i++);
+    lcd_i2c_write(data & ~LCD_ENABLE);
+    lcd_i2c_stop();
 }
 
-void lcd_put_cursor(int row, int col) {
-    uint8_t pos = (row == 0) ? (LCD_CMD_SET_CURSOR + col)
-                             : (LCD_CMD_SET_CURSOR + 0x40 + col);
-    lcd_send_cmd(pos);
+void lcd_write_byte(uint8_t byte, uint8_t control) {
+    lcd_write_nibble(byte & 0xF0, control);
+    lcd_write_nibble((byte << 4) & 0xF0, control);
 }
 
-void lcd_send_string(const char *str) {
-    while (*str) {
-        lcd_send_data((uint8_t)(*str++));
-    }
+void lcd_command(uint8_t cmd) {
+    lcd_write_byte(cmd, 0x00);
+    for (volatile int i = 0; i < 5000; i++);
+}
+
+void lcd_data(uint8_t data) {
+    lcd_write_byte(data, LCD_REGISTER_SELECT);
+    for (volatile int i = 0; i < 5000; i++);
 }
 
 void lcd_init(void) {
-    timer_delay_ms(50); // >40ms sau khi bật nguồn
+    for (volatile int i = 0; i < 100000; i++);
+    lcd_command(0x33);
+    lcd_command(0x32);
+    lcd_command(0x28);
+    lcd_command(0x0C);
+    lcd_command(0x06);
+    lcd_command(0x01);
+    for (volatile int i = 0; i < 50000; i++);
+}
 
-    lcd_write_4bit(0x30);
-    timer_delay_ms(5);
-    lcd_write_4bit(0x30);
-    timer_delay_ms(1);
-    lcd_write_4bit(0x30);
-    timer_delay_ms(10);
-    lcd_write_4bit(0x20); // 4-bit mode
-    timer_delay_ms(10);
-
-    lcd_send_cmd(LCD_CMD_FUNCTION_SET);
-    lcd_send_cmd(LCD_CMD_DISPLAY_OFF);
-    lcd_send_cmd(LCD_CMD_CLEAR_DISPLAY);
-    lcd_send_cmd(LCD_CMD_ENTRY_MODE_SET);
-    lcd_send_cmd(LCD_CMD_DISPLAY_ON);
+void lcd_print(char *str) {
+    while (*str) {
+        lcd_data((uint8_t)(*str++));
+    }
 }
