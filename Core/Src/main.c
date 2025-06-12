@@ -8,6 +8,7 @@
 #include "i2c.h"
 #include "main.h"
 #include "timer.h"
+#include "buzzer.h"
 
 int main(void)
 {
@@ -19,6 +20,8 @@ int main(void)
 	lora_init_rx();
 	while (1) {
 //		led_on(LED_OK_PORT, LED_OK_PIN);
+		led_check();
+		buzzer_delay(1000);
 	}
 
 

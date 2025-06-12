@@ -24,7 +24,7 @@ void lcd_send_string(const char *str);
 static void lcd_write_4bit(uint8_t data) {
     // Gửi 1 byte tới I2C LCD
     I2C1_WriteByte(SLAVE_ADDRESS_LCD, data);
-    timer_delayms(1);
+    timer_delay_ms(1);
 }
 
 void lcd_send_cmd(uint8_t cmd) {
@@ -49,7 +49,7 @@ void lcd_send_data(uint8_t data) {
 
 void lcd_clear(void) {
     lcd_send_cmd(LCD_CMD_CLEAR_DISPLAY);
-    timer_delayms(2);
+    timer_delay_ms(2);
 }
 
 void lcd_put_cursor(int row, int col) {
@@ -65,16 +65,16 @@ void lcd_send_string(const char *str) {
 }
 
 void lcd_init(void) {
-    timer_delayms(50); // >40ms sau khi bật nguồn
+    timer_delay_ms(50); // >40ms sau khi bật nguồn
 
     lcd_write_4bit(0x30);
-    timer_delayms(5);
+    timer_delay_ms(5);
     lcd_write_4bit(0x30);
-    timer_delayms(1);
+    timer_delay_ms(1);
     lcd_write_4bit(0x30);
-    timer_delayms(10);
+    timer_delay_ms(10);
     lcd_write_4bit(0x20); // 4-bit mode
-    timer_delayms(10);
+    timer_delay_ms(10);
 
     lcd_send_cmd(LCD_CMD_FUNCTION_SET);
     lcd_send_cmd(LCD_CMD_DISPLAY_OFF);

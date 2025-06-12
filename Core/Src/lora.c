@@ -4,6 +4,7 @@
 #include "led.h"
 #include "lora.h"
 #include "buzzer.h"
+#include <string.h>
 
 #define LORA_NSS_LOW()   (GPIOA->BSRR = GPIO_BSRR_BR4)
 #define LORA_NSS_HIGH()  (GPIOA->BSRR = GPIO_BSRR_BS4)
@@ -132,7 +133,6 @@ void lora_handle_packet_interrupt(void) {
 
         if (crc == buffer[len - 1]) {
             led_on(LED_RAW_PORT, LED_RAW_PIN);
-            buzzer_on();
             uint8_t dev_id = buffer[0];
 			uint32_t timestamp = buffer[1] | (buffer[2] << 8) | (buffer[3] << 16) | (buffer[4] << 24);
 			float lat, lon;

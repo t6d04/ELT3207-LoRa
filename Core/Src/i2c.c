@@ -20,7 +20,7 @@ void i2c1_start(void) {
 
 void i2c1_stop(void) {
     I2C1->CR1 |= I2C_CR1_STOP;
-    timer_delayms(1);
+    timer_delay_ms(1);
 }
 
 uint8_t i2c1_check_address(uint8_t address) {
