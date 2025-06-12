@@ -133,11 +133,14 @@ void lora_handle_packet_interrupt(void) {
 
         if (crc == buffer[len - 1]) {
             led_on(LED_RAW_PORT, LED_RAW_PIN);
+
             uint8_t dev_id = buffer[0];
 			uint32_t timestamp = buffer[1] | (buffer[2] << 8) | (buffer[3] << 16) | (buffer[4] << 24);
 			float lat, lon;
 			memcpy(&lat, &buffer[5], 4);
 			memcpy(&lon, &buffer[9], 4);
+
+			// dữ liệu của gps nhận được ở đây
         } else {
             led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
         }
