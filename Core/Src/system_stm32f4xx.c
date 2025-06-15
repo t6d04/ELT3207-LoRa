@@ -164,23 +164,27 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
   * @param  None
   * @retval None
   */
-void SystemInit(void)
-{
-  /* FPU settings ------------------------------------------------------------*/
-  #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+  void SystemInit(void) {
+      /* FPU settings */
+      #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+          SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); /* set CP10 and CP11 Full Access */
+      #endif
+
+      /* Configure HSI 16MHz */
+      RCC->CR |= RCC_CR_HSION;
+      while (!(RCC->CR & RCC_CR_HSIRDY)); // Chờ HSI sẵn sàng
+      RCC->CFGR &= ~RCC_CFGR_SW; // Xóa bit chọn nguồn clock
+      RCC->CFGR |= RCC_CFGR_SW_HSI; // Chọn HSI
+      while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI); // Chờ chuyển sang HSI
+
+      /* Vector Table configuration */
+  #if defined(USER_VECT_TAB_ADDRESS)
+      SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET;
   #endif
 
-#if defined (DATA_IN_ExtSRAM) || defined (DATA_IN_ExtSDRAM)
-  SystemInit_ExtMemCtl(); 
-#endif /* DATA_IN_ExtSRAM || DATA_IN_ExtSDRAM */
-
-  /* Configure the Vector Table location -------------------------------------*/
-#if defined(USER_VECT_TAB_ADDRESS)
-  SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
-#endif /* USER_VECT_TAB_ADDRESS */
-}
-
+      /* Update SystemCoreClock */
+      SystemCoreClockUpdate();
+  }
 /**
    * @brief  Update SystemCoreClock variable according to Clock Register Values.
   *         The SystemCoreClock variable contains the core clock (HCLK), it can

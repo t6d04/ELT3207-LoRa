@@ -27,7 +27,7 @@ Core/Src/main.o: ../Core/Src/main.c \
  ../Core/Inc/lcd.h ../Core/Inc/i2c.h ../Core/Inc/gpio.h \
  ../Core/Inc/button.h ../Core/Inc/system.h ../Core/Inc/lora.h \
  ../Core/Inc/led.h ../Core/Inc/main.h ../Core/Inc/timer.h \
- ../Core/Inc/buzzer.h
+ ../Core/Inc/buzzer.h ../Core/Inc/uart.h
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f411xe.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -63,3 +63,4 @@ Core/Src/main.o: ../Core/Src/main.c \
 ../Core/Inc/main.h:
 ../Core/Inc/timer.h:
 ../Core/Inc/buzzer.h:
+../Core/Inc/uart.h:

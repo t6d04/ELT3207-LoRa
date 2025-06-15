@@ -9,6 +9,7 @@
 #include <string.h>
 #include "lcd.h"
 #include "i2c.h"
+#include "uart.h"
 #define LORA_NSS_LOW()   (GPIOA->BSRR = GPIO_BSRR_BR4)
 #define LORA_NSS_HIGH()  (GPIOA->BSRR = GPIO_BSRR_BS4)
 #define LORA_RST_LOW()   (GPIOA->BSRR = GPIO_BSRR_BR2)
@@ -82,58 +83,41 @@ void LORA_GPIO_Init(void) {
 }
 
 void lora_init_rx(void) {
-
     led_on(LED_POWER_PORT, LED_POWER_PIN);
     LORA_RST_LOW();
     timer_delay_ms(10);
     LORA_RST_HIGH();
     timer_delay_ms(10);
-    // Chờ đến khi module LoRa sẵn sàng (đọc được version đúng)
-    while (lora_read_reg(REG_VERSION) != 0x12) {
-        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);  // Báo lỗi
-        timer_delay_ms(500);                      // Delay để tránh đọc liên tục quá nhanh
+    uint8_t count = 0;
+    while (lora_read_reg(REG_VERSION) != 0x12 && count < 10) {
+        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
+        timer_delay_ms(500);
+        count++;
     }
-
-//    if (lora_read_reg(REG_VERSION) != 0x12) {
-//        // Bật LED báo lỗi thay vì treo
-//        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
-//
-//
-//
-//        return;  // Exit function, không cấu hình nữa
-//    }
-
-//    if (lora_read_reg(REG_VERSION) != 0x12) {
-//        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
-//        while (1);
-//    }
-
+    if (count >= 10) {
+        GPIOC->ODR |= (1 << 3);
+        return;
+    }
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_SLEEP);
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_STDBY);
-
     lora_write_reg(REG_FREQ_MSB, 0x6C);
     lora_write_reg(REG_FREQ_MID, 0x80);
     lora_write_reg(REG_FREQ_LSB, 0x00);
-
     lora_write_reg(REG_PREAMBLE_MSB, 0x00);
     lora_write_reg(REG_PREAMBLE_LSB, 0x08);
     lora_write_reg(REG_SYNC_WORD, 0x12);
-
     lora_write_reg(REG_MODEM_CONFIG1, 0x72);
-    lora_write_reg(REG_MODEM_CONFIG2, 0xC4);
+    lora_write_reg(REG_MODEM_CONFIG2, 0xC0); // SF12
     lora_write_reg(REG_MODEM_CONFIG3, 0x04);
-
     lora_write_reg(REG_FIFO_RX_BASE_ADDR, 0x00);
     lora_write_reg(REG_DIO_MAPPING1, 0x00);
-
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
     led_on(LED_OK_PORT, LED_OK_PIN);
-//    led_off(LED_IGNORE_PORT, LED_IGNORE_PIN);
 }
 
 
 void lora_handle_packet_interrupt(void) {
-    char debug[64];
+    char debug[128];
     uint8_t irq_flags = lora_read_reg(REG_IRQ_FLAGS);
     snprintf(debug, sizeof(debug), "IRQ Flags: 0x%02X\r\n", irq_flags);
     uart2_send_string(debug); // Gửi cờ IRQ qua UART
@@ -211,13 +195,4 @@ void lora_handle_packet_interrupt(void) {
         lora_write_reg(REG_IRQ_FLAGS, 0xFF);
     }
 }
-
-
-
-
-
-
-
-
-
 

@@ -25,7 +25,8 @@ Core/Src/lora.o: ../Core/Src/lora.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Core/Inc/timer.h ../Core/Inc/led.h ../Core/Inc/lora.h \
- ../Core/Inc/buzzer.h ../Core/Inc/lcd.h ../Core/Inc/i2c.h
+ ../Core/Inc/buzzer.h ../Core/Inc/lcd.h ../Core/Inc/i2c.h \
+ ../Core/Inc/uart.h
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f411xe.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -57,3 +58,4 @@ Core/Src/lora.o: ../Core/Src/lora.c \
 ../Core/Inc/buzzer.h:
 ../Core/Inc/lcd.h:
 ../Core/Inc/i2c.h:
+../Core/Inc/uart.h:
