@@ -11,7 +11,9 @@
 #define REG_FIFO_RX_CURRENT   0x10
 #define REG_IRQ_FLAGS         0x12
 #define REG_RX_NB_BYTES       0x13
+#define REG_PKT_SNR_VALUE     0x19
 #define REG_PKT_RSSI_VALUE    0x1A
+#define REG_RSSI_VALUE        0x1B
 #define REG_MODEM_CONFIG1     0x1D
 #define REG_MODEM_CONFIG2     0x1E
 #define REG_MODEM_CONFIG3     0x26
@@ -30,6 +32,11 @@
 #define MODE_STDBY            0x01
 #define MODE_RX_CONTINUOUS    0x05
 
+// Khai báo biến toàn cục
+extern float g_lat, g_lon;
+extern uint8_t g_has_data;
+extern uint8_t g_dev_id;
+
 // Khởi tạo SPI1 và GPIO liên quan đến LoRa
 void SPI1_Init(void);
 void LORA_GPIO_Init(void);
@@ -39,5 +46,8 @@ void lora_init_rx(void);
 
 // Xử lý khi nhận gói tin (gọi từ EXTI0_IRQHandler)
 void lora_handle_packet_interrupt(void);
+
+// Kiểm tra trạng thái LoRa
+void lora_check_status(void);
 
 #endif

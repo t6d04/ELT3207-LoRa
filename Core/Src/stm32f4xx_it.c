@@ -1,45 +1,25 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file    stm32f4xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-/* USER CODE END Includes */
 #include "button.h"
 #include "lora.h"
 #include "gpio.h"
 #include "system.h"
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN TD */
+#include "buzzer.h"
+#include "uart.h"
+#include "led.h"
+
 void EXTI0_IRQHandler(void) {
     if (EXTI->PR & (1 << 0)) {
-        EXTI->PR |= (1 << 0); // clear pending
-        lora_handle_packet_interrupt(); // gọi hàm xử lý
+        EXTI->PR |= (1 << 0);
+        uart2_send_string("DIO0 Interrupt triggered\r\n");
+        led_toggle(LED_OK_PORT, LED_OK_PIN);
+        lora_handle_packet_interrupt();
     }
 }
 
 void EXTI3_IRQHandler(void) {
     if (EXTI->PR & (1 << 3)) {
         EXTI->PR |= (1 << 3);
-
         NVIC_SystemReset();
     }
 }
@@ -47,190 +27,55 @@ void EXTI3_IRQHandler(void) {
 void EXTI9_5_IRQHandler(void) {
     if (EXTI->PR & (1 << 5)) {
         EXTI->PR |= (1 << 5);
-        // TODO: OFF BUZZER
-
+        buzzer_off();
     }
 }
 
 void EXTI15_10_IRQHandler(void) {
     if (EXTI->PR & (1 << 13)) {
         EXTI->PR |= (1 << 13);
-
-        system_powered_on ^= 1;  // Toggle trạng thái
-
+        system_powered_on ^= 1;
         if (system_powered_on)
-			system_startup();
-		else
-			system_shutdown();
+            system_startup();
+        else
+            system_shutdown();
     }
 }
-/* USER CODE END TD */
 
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/* External variables --------------------------------------------------------*/
-
-/* USER CODE BEGIN EV */
-
-/* USER CODE END EV */
-
-/******************************************************************************/
-/*           Cortex-M4 Processor Interruption and Exception Handlers          */
-/******************************************************************************/
-/**
-  * @brief This function handles Non maskable interrupt.
-  */
-void NMI_Handler(void)
-{
-  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
-  /* USER CODE END NonMaskableInt_IRQn 0 */
-  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-   while (1)
-  {
-  }
-  /* USER CODE END NonMaskableInt_IRQn 1 */
+void NMI_Handler(void) {
+    while (1) {}
 }
 
-/**
-  * @brief This function handles Hard fault interrupt.
-  */
-void HardFault_Handler(void)
-{
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
-  }
+void HardFault_Handler(void) {
+    uart2_send_string("HardFault occurred!\r\n");
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+    GPIOC->MODER |= (0x1 << (13 * 2));
+    GPIOC->OTYPER &= ~(1 << 13);
+    while (1) {
+        GPIOC->ODR ^= (1 << 13);
+        for (volatile uint32_t i = 0; i < 1000000; i++);
+    }
 }
 
-/**
-  * @brief This function handles Memory management fault.
-  */
-void MemManage_Handler(void)
-{
-  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-
-  /* USER CODE END MemoryManagement_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
-    /* USER CODE END W1_MemoryManagement_IRQn 0 */
-  }
+void MemManage_Handler(void) {
+    while (1) {}
 }
 
-/**
-  * @brief This function handles Pre-fetch fault, memory access fault.
-  */
-void BusFault_Handler(void)
-{
-  /* USER CODE BEGIN BusFault_IRQn 0 */
-
-  /* USER CODE END BusFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
-    /* USER CODE END W1_BusFault_IRQn 0 */
-  }
+void BusFault_Handler(void) {
+    while (1) {}
 }
 
-/**
-  * @brief This function handles Undefined instruction or illegal state.
-  */
-void UsageFault_Handler(void)
-{
-  /* USER CODE BEGIN UsageFault_IRQn 0 */
-
-  /* USER CODE END UsageFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
-    /* USER CODE END W1_UsageFault_IRQn 0 */
-  }
+void UsageFault_Handler(void) {
+    while (1) {}
 }
 
-/**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVCall_IRQn 0 */
+void SVC_Handler(void) {}
 
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
+void DebugMon_Handler(void) {}
 
-  /* USER CODE END SVCall_IRQn 1 */
-}
+void PendSV_Handler(void) {}
 
-/**
-  * @brief This function handles Debug monitor.
-  */
-void DebugMon_Handler(void)
-{
-  /* USER CODE BEGIN DebugMonitor_IRQn 0 */
-
-  /* USER CODE END DebugMonitor_IRQn 0 */
-  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
-
-  /* USER CODE END DebugMonitor_IRQn 1 */
-}
-
-/**
-  * @brief This function handles Pendable request for system service.
-  */
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
-}
-
-/**
-  * @brief This function handles System tick timer.
-  */
 #include "timer.h"
-
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
     timer_systick_callback();
 }
-
-/******************************************************************************/
-/* STM32F4xx Peripheral Interrupt Handlers                                    */
-/* Add here the Interrupt Handlers for the used peripherals.                  */
-/* For the available peripheral interrupt handler names,                      */
-/* please refer to the startup file (startup_stm32f4xx.s).                    */
-/******************************************************************************/
-
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */

@@ -2,21 +2,21 @@
 #include "lcd.h"
 
 void lcd_i2c_start(void) {
-    I2C2->CR1 |= I2C_CR1_START;
-    while (!(I2C2->SR1 & I2C_SR1_SB));
-    I2C2->DR = (LCD_ADDR << 1);
-    while (!(I2C2->SR1 & I2C_SR1_ADDR));
-    (void)I2C2->SR1; (void)I2C2->SR2;
+    I2C1->CR1 |= I2C_CR1_START;
+    while (!(I2C1->SR1 & I2C_SR1_SB));
+    I2C1->DR = (LCD_ADDR << 1);               // Gửi địa chỉ LCD (ghi)
+    while (!(I2C1->SR1 & I2C_SR1_ADDR));
+    (void)I2C1->SR1; (void)I2C1->SR2;
 }
 
 void lcd_i2c_stop(void) {
-    I2C2->CR1 |= I2C_CR1_STOP;
+    I2C1->CR1 |= I2C_CR1_STOP;
 }
 
 void lcd_i2c_write(uint8_t data) {
-    while (!(I2C2->SR1 & I2C_SR1_TXE));
-    I2C2->DR = data;
-    while (!(I2C2->SR1 & I2C_SR1_BTF));
+    while (!(I2C1->SR1 & I2C_SR1_TXE));
+    I2C1->DR = data;
+    while (!(I2C1->SR1 & I2C_SR1_BTF));
 }
 
 void lcd_write_nibble(uint8_t nibble, uint8_t control) {

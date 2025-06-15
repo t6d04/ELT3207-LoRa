@@ -28,6 +28,8 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+extern volatile uint8_t dio0_triggered; // Khai báo biến toàn cục
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

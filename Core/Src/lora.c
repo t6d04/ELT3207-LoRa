@@ -5,11 +5,16 @@
 #include "lora.h"
 #include "buzzer.h"
 #include <string.h>
-
+#include <stdio.h>
+#include <string.h>
+#include "lcd.h"
+#include "i2c.h"
 #define LORA_NSS_LOW()   (GPIOA->BSRR = GPIO_BSRR_BR4)
 #define LORA_NSS_HIGH()  (GPIOA->BSRR = GPIO_BSRR_BS4)
 #define LORA_RST_LOW()   (GPIOA->BSRR = GPIO_BSRR_BR2)
 #define LORA_RST_HIGH()  (GPIOA->BSRR = GPIO_BSRR_BS2)
+
+
 
 static void spi1_write(uint8_t data) {
     while (!(SPI1->SR & SPI_SR_TXE));
@@ -77,17 +82,31 @@ void LORA_GPIO_Init(void) {
 }
 
 void lora_init_rx(void) {
-    led_on(LED_POWER_PORT, LED_POWER_PIN);
 
+    led_on(LED_POWER_PORT, LED_POWER_PIN);
     LORA_RST_LOW();
     timer_delay_ms(10);
     LORA_RST_HIGH();
     timer_delay_ms(10);
-
-    if (lora_read_reg(REG_VERSION) != 0x12) {
-//        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
-        while (1);
+    // Chờ đến khi module LoRa sẵn sàng (đọc được version đúng)
+    while (lora_read_reg(REG_VERSION) != 0x12) {
+        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);  // Báo lỗi
+        timer_delay_ms(500);                      // Delay để tránh đọc liên tục quá nhanh
     }
+
+//    if (lora_read_reg(REG_VERSION) != 0x12) {
+//        // Bật LED báo lỗi thay vì treo
+//        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
+//
+//
+//
+//        return;  // Exit function, không cấu hình nữa
+//    }
+
+//    if (lora_read_reg(REG_VERSION) != 0x12) {
+//        led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
+//        while (1);
+//    }
 
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_SLEEP);
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_STDBY);
@@ -109,14 +128,27 @@ void lora_init_rx(void) {
 
     lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
     led_on(LED_OK_PORT, LED_OK_PIN);
+//    led_off(LED_IGNORE_PORT, LED_IGNORE_PIN);
 }
 
-void lora_handle_packet_interrupt(void) {
-    if (lora_read_reg(REG_IRQ_FLAGS) & 0x40) {
-        uint8_t len = lora_read_reg(REG_RX_NB_BYTES);
-        lora_write_reg(REG_FIFO_ADDR_PTR, lora_read_reg(REG_FIFO_RX_CURRENT));
 
-        if (len > 32) return;
+void lora_handle_packet_interrupt(void) {
+    char debug[64];
+    uint8_t irq_flags = lora_read_reg(REG_IRQ_FLAGS);
+    snprintf(debug, sizeof(debug), "IRQ Flags: 0x%02X\r\n", irq_flags);
+    uart2_send_string(debug); // Gửi cờ IRQ qua UART
+
+    if (irq_flags & 0x40) { // Kiểm tra RxDone
+        uint8_t len = lora_read_reg(REG_RX_NB_BYTES);
+        snprintf(debug, sizeof(debug), "Received %d bytes\r\n", len);
+        uart2_send_string(debug);
+
+        if (len > 32) {
+            uart2_send_string("Error: Packet too long\r\n");
+            return;
+        }
+
+        lora_write_reg(REG_FIFO_ADDR_PTR, lora_read_reg(REG_FIFO_RX_CURRENT));
         uint8_t buffer[32];
 
         LORA_NSS_LOW();
@@ -126,23 +158,66 @@ void lora_handle_packet_interrupt(void) {
         }
         LORA_NSS_HIGH();
 
-        lora_write_reg(REG_IRQ_FLAGS, 0xFF);
+        // Gửi dữ liệu thô qua UART
+        uart2_send_string("Raw data: ");
+        for (uint8_t i = 0; i < len; i++) {
+            snprintf(debug, sizeof(debug), "0x%02X ", buffer[i]);
+            uart2_send_string(debug);
+        }
+        uart2_send_string("\r\n");
+
+        lora_write_reg(REG_IRQ_FLAGS, 0xFF); // Xóa cờ ngắt
 
         uint8_t crc = 0;
-        for (uint8_t i = 0; i < len - 1; i++) crc ^= buffer[i];
+        for (uint8_t i = 0; i < len - 1; i++) {
+            crc ^= buffer[i];
+        }
 
         if (crc == buffer[len - 1]) {
             led_on(LED_RAW_PORT, LED_RAW_PIN);
-
             uint8_t dev_id = buffer[0];
-			uint32_t timestamp = buffer[1] | (buffer[2] << 8) | (buffer[3] << 16) | (buffer[4] << 24);
-			float lat, lon;
-			memcpy(&lat, &buffer[5], 4);
-			memcpy(&lon, &buffer[9], 4);
+            uint32_t timestamp = buffer[1] | (buffer[2] << 8) | (buffer[3] << 16) | (buffer[4] << 24);
+            float lat, lon;
+            memcpy(&lat, &buffer[5], 4);
+            memcpy(&lon, &buffer[9], 4);
 
-			// dữ liệu của gps nhận được ở đây
+            snprintf(debug, sizeof(debug), "Valid packet: DevID=%d, Timestamp=%lu, Lat=%.6f, Lon=%.6f\r\n",
+                     dev_id, timestamp, lat, lon);
+            uart2_send_string(debug);
+
+            char line1[17], line2[17];
+            snprintf(line1, sizeof(line1), "Lat: %.6f", lat);
+            snprintf(line2, sizeof(line2), "Lon: %.6f", lon);
+
+            lcd_command(0x01); // Xóa LCD
+            lcd_print(line1);  // Dòng 1
+            lcd_command(0xC0); // Xuống dòng 2
+            lcd_print(line2);  // Dòng 2
+
+            buzzer_on();
         } else {
             led_on(LED_IGNORE_PORT, LED_IGNORE_PIN);
+            snprintf(debug, sizeof(debug), "CRC Error: Calculated=0x%02X, Received=0x%02X\r\n",
+                     crc, buffer[len - 1]);
+            uart2_send_string(debug);
+            lcd_command(0x01);
+            lcd_print("CRC Loi");
         }
+    } else {
+        uart2_send_string("No RxDone\r\n");
+        lcd_command(0x01);
+        lcd_print("Khong RxDone");
+        buzzer_off();
+        lora_write_reg(REG_IRQ_FLAGS, 0xFF);
     }
 }
+
+
+
+
+
+
+
+
+
+
