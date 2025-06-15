@@ -1,0 +1,2 @@
+../Core/Src/system.c:9:6:system_startup	1
+../Core/Src/system.c:18:6:system_shutdown	1

@@ -1,0 +1,5 @@
+../Core/Src/led.c:14:6:led_on	5
+../Core/Src/led.c:26:6:led_off	4
+../Core/Src/led.c:35:6:led_toggle	5
+../Core/Src/led.c:50:6:led_blink	4
+../Core/Src/led.c:59:6:led_check	5

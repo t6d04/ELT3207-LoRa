@@ -1,0 +1,9 @@
+../Drivers/CMSIS/Include/core_cm4.h:1684:22:__NVIC_EnableIRQ	2
+../Core/Src/lora.c:19:13:spi1_write	3
+../Core/Src/lora.c:26:16:spi1_transfer	3
+../Core/Src/lora.c:33:13:lora_write_reg	1
+../Core/Src/lora.c:40:16:lora_read_reg	1
+../Core/Src/lora.c:48:6:SPI1_Init	1
+../Core/Src/lora.c:66:6:LORA_GPIO_Init	1
+../Core/Src/lora.c:84:6:lora_init_rx	2
+../Core/Src/lora.c:135:6:lora_handle_packet_interrupt	7
